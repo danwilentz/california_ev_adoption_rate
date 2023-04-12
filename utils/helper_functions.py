@@ -4,7 +4,17 @@ import geoplot
 import geoplot.crs as gcrs
 import pandas as pd
 
-def combine_zip_codes_and_counties(zip_code_geojson_path, county_geojson_path):
+# Column type dictionary for reading in vehicle csv data:
+dtype_dict = {'Date': 'object', 
+            'Zip Code': 'object',
+            'Model Year': 'object',
+            'Fuel': 'object',
+            'Make': 'object',
+            'Duty': 'object',
+            'Vehicles': 'int64'
+}
+
+def combine_zip_codes_and_county_geos(zip_code_geojson_path, county_geojson_path):
     """
     Combines a zip_code geojson with a county geojson. 
     Meant to be run on California but could be used for other regions. 
@@ -63,6 +73,87 @@ def combine_zip_codes_and_counties(zip_code_geojson_path, county_geojson_path):
 
 
 
+def city_geos(city_geojson_path):
+    """
+    Function to process city geojson file for plotting purposes.
+    Returns a GeoDataFrame with california cities, their centroids and coordinates
+    Meant to be used in conjunction with plotting counties and/or zip codes
+
+    Inputs:
+    city_geojson_path
+        type: string
+        description: path to city geojson
+
+    Returns:
+    cities
+        type: geopandas.geodataframe.GeoDataFrame
+        description: GeoDataFrame with both city geometry (including centroids and coordinates)
+    """
+
+    # Read in city geojson file:
+    cities = gpd.read_file(city_geojson_path)
+
+    # Drop unecessary columns
+    cities.drop(columns = ['OBJECTID', 'COUNTY', 'Shape__Area', 'Shape__Length', 'GlobalID'], inplace = True)
+
+    # Lower columns
+    cities.columns = cities.columns.str.lower()
+
+    # Reset CRS from 4326 to 3857 for centroid computation
+    cities.to_crs(3857, inplace = True)
+
+    # Calculate centroids
+    cities['centroid'] = cities.centroid
+
+    # Set active geometry to centroids
+    cities.set_geometry('centroid', inplace = True)
+
+    # Look at only 10 major cities
+    big_cities = [
+        "Los Angeles",
+        "San Diego",
+        "San Jose",
+        "San Francisco",
+        "Fresno",
+        "Sacramento",
+        "Santa Barbara",
+        "South Lake Tahoe",
+        "Redding",
+        'Eureka'
+    ]
+    cities = cities[cities['city'].isin(big_cities)]
+
+    # Get coordinates of centroids for map annotating 
+    cities['coords'] = cities['centroid'].apply(lambda x: x.representative_point().coords[:])
+    cities['coords'] = [coords[0] for coords in cities['coords']]
+
+    return cities
+
+
+
+
+def total_vehicles_by_zip(vehicle_data_year_csv_path):
+    """
+    Processes a csv of yearly dmv data and returns a dataframe
+    of total vehicles by zip code
+    Inputs:
+    vehicle_data_year_csv_path:
+        type: string
+        description: path to vehicle data csv
+    Outputs:
+    total_vehicles_by_zip_df:
+        type: pd.DataFrame
+        description: DataFrame of total vehicles by zip code
+    """
+
+    raw = pd.read_csv(vehicle_data_year_csv_path, dtype = dtype_dict)
+    raw.columns= raw.columns.str.lower()
+    raw.rename(columns = {'zip code': 'zip_code'}, inplace = True)
+    total_vehicles_by_zip_df = raw.groupby('zip_code')['vehicles'].sum()
+    return total_vehicles_by_zip_df
+
+
+
 def ev_adoption_rate(vehicle_data_year_csv_path, input_year):
     """
     Analyzes a csv of yearly dmv vehicle data and returns a dataframe
@@ -76,17 +167,12 @@ def ev_adoption_rate(vehicle_data_year_csv_path, input_year):
     input_year:
         type: int
         description: year csv path corresponds to
+    
+    Outputs:
+    return_df:
+        type: pd.DataFrame
+        description: DataFrame showing percentage of registered vehicles in 3 most recent years by fuel type
     """
-
-    # Column type dictionary for reading in vehicle csv data:
-    dtype_dict = {'Date': 'object', 
-                'Zip Code': 'object',
-                'Model Year': 'object',
-                'Fuel': 'object',
-                'Make': 'object',
-                'Duty': 'object',
-                'Vehicles': 'int64'
-    }
 
     # Fuel type dictionary:
     fuel_dict = {'Battery Electric': 'ZEV',
