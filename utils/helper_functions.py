@@ -2,6 +2,7 @@ from datetime import datetime
 import geopandas as gpd
 import geoplot
 import geoplot.crs as gcrs
+import numpy as np
 import pandas as pd
 
 # Column type dictionary for reading in vehicle csv data:
@@ -13,6 +14,29 @@ dtype_dict = {'Date': 'object',
             'Duty': 'object',
             'Vehicles': 'int64'
 }
+
+# Fuel type dictionary:
+fuel_dict = {'Battery Electric': 'ZEV',
+            'Diesel and Diesel Hybrid': 'Fuel',
+            'Flex-Fuel': 'Fuel',
+            'Gasoline': 'Fuel',
+            'Hybrid Gasoline': 'Hybrid',
+            'Hydrogen Fuel Cell': 'ZEV',
+            'Natural Gas': 'Fuel',
+            'Other': 'Fuel',
+            'Plug-in Hybrid': 'Hybrid'
+}
+
+# Determine the newest 3 years for this particluar year:
+newest_years_dict = {
+    2018: ['2017', '2018', '2019'],
+    2020: ['2020', '2019', '2018'],
+    2021: ['2021', '2020', '2019'],
+    2022: ['2022', '2021', '2020']
+}
+
+
+
 
 def combine_zip_codes_and_county_geos(zip_code_geojson_path, county_geojson_path):
     """
@@ -70,6 +94,7 @@ def combine_zip_codes_and_county_geos(zip_code_geojson_path, county_geojson_path
     print(f'Our join lost us {lost_num_zips} zip codes out of {len(zip_codes)}')
 
     return zip_codes_with_county
+
 
 
 
@@ -154,6 +179,43 @@ def total_vehicles_by_zip(vehicle_data_year_csv_path):
 
 
 
+
+def total_vehicles_and_evs_by_zip(vehicle_data_year_csv_path, input_year):
+    """
+    Processes a csv of yearly dmv data and returns a dataframe
+    of total vehicles and total evs by zip code
+    Inputs:
+    vehicle_data_year_csv_path:
+        type: string
+        description: path to vehicle data csv
+    Outputs:
+    v_and_evs_by_zip_df:
+        type: pd.DataFrame
+        description: DataFrame of total vehicles and evs by zip code
+    """
+    # read data
+    raw = pd.read_csv(vehicle_data_year_csv_path, dtype = dtype_dict)
+
+    # process data
+    raw.columns= raw.columns.str.lower()
+    raw['date']= pd.to_datetime(raw['date'])
+    raw['fuel (broad)'] = raw['fuel'].map(fuel_dict)
+    raw.rename(columns = {'fuel': 'fuel (specific)', 'zip code': 'zip_code'}, inplace = True)
+
+    # Grab only newest years
+    newest_years = newest_years_dict[input_year]
+    raw_newest = raw[raw['model year'].isin(newest_years)]
+
+    # Grab column for ev counts
+    raw_newest['evs'] = np.where(raw_newest['fuel (broad)'].isin(['ZEV', 'Hybrid']), raw_newest['vehicles'], 0)
+    
+    # Group by zip code and return
+    total_vehicles_by_zip_df = raw_newest.groupby('zip_code')[['vehicles', 'evs']].sum().reset_index()
+    return total_vehicles_by_zip_df
+
+
+
+
 def ev_adoption_rate(vehicle_data_year_csv_path, input_year):
     """
     Analyzes a csv of yearly dmv vehicle data and returns a dataframe
@@ -173,32 +235,12 @@ def ev_adoption_rate(vehicle_data_year_csv_path, input_year):
         type: pd.DataFrame
         description: DataFrame showing percentage of registered vehicles in 3 most recent years by fuel type
     """
-
-    # Fuel type dictionary:
-    fuel_dict = {'Battery Electric': 'ZEV',
-                'Diesel and Diesel Hybrid': 'Fuel',
-                'Flex-Fuel': 'Fuel',
-                'Gasoline': 'Fuel',
-                'Hybrid Gasoline': 'Hybrid',
-                'Hydrogen Fuel Cell': 'ZEV',
-                'Natural Gas': 'Fuel',
-                'Other': 'Fuel',
-                'Plug-in Hybrid': 'Hybrid'
-    }
-
     # Read in CSV and perform some transformations
     raw = pd.read_csv(vehicle_data_year_csv_path, dtype = dtype_dict)
     raw['Date']= pd.to_datetime(raw['Date'])
     raw['Fuel (Broad)'] = raw['Fuel'].map(fuel_dict)
     raw.rename({'Fuel': 'Fuel (Specific)'})
 
-    # Determine the newest 3 years for this particluar year:
-    newest_years_dict = {
-        2018: ['2017', '2018', '2019'],
-        2020: ['2020', '2019', '2018'],
-        2021: ['2021', '2020', '2019'],
-        2022: ['2022', '2021', '2020']
-    }
     newest_years = newest_years_dict[input_year]
     raw_newest = raw[raw['Model Year'].isin(newest_years)]
 
