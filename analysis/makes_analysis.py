@@ -40,7 +40,7 @@ fuel_dict = {'Battery Electric': 'ZEV',
             'Diesel and Diesel Hybrid': 'Fuel',
             'Flex-Fuel': 'Fuel',
             'Gasoline': 'Fuel',
-            'Hybrid Gasoline': 'Hybrid',
+            'Hybrid Gasoline': 'Fuel',
             'Hydrogen Fuel Cell': 'ZEV',
             'Natural Gas': 'Fuel',
             'Other': 'Fuel',
@@ -73,17 +73,17 @@ makes_summary_2022 = raw_newest.groupby('make')[['evs', 'vehicles']].sum().sort_
 makes_summary_2022['ev_rate_2022'] = round(makes_summary_2022['evs']/makes_summary_2022['vehicles']*100, 2)
 total_evs = makes_summary_2022['evs'].sum()
 makes_summary_2022['pct_of_total_evs'] = round(makes_summary_2022['evs']/total_evs*100, 2)
-print(makes_summary_2022.head(10))
+print(makes_summary_2022[makes_summary_2022['make'] != 'OTHER/UNK'].head(10))
 print()
 
 # Who's selling the most cars, overall
 print('Who is selling the most cars, overall?')
-print(makes_summary_2022.sort_values(by = 'vehicles', ascending = False).head(10))
+print(makes_summary_2022[makes_summary_2022['make'] != 'OTHER/UNK'].sort_values(by = 'vehicles', ascending = False).head(10))
 print()
 
 # Who has the highest rate of EV sales of all car sales?
 print('Who has the highest EV sell rate?')
-print(makes_summary_2022.sort_values(by = 'ev_rate_2022', ascending = False).head(10))
+print(makes_summary_2022[makes_summary_2022['make'] != 'OTHER/UNK'].sort_values(by = 'ev_rate_2022', ascending = False).head(10))
 print()
 
 
@@ -189,5 +189,5 @@ for edge in ['right', 'bottom', 'top','left']:
 ax.set_title('Largest EV sellers per County', size=18, weight='bold')
 
 # Save plot
-fig.savefig('../pics/largest_ev_sellers_per_county.png')
+fig.savefig('../pics/largest_ev_sellers_per_county_2.png')
 plt.close(fig)

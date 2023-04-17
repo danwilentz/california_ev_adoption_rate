@@ -149,7 +149,7 @@ for edge in ['right', 'bottom', 'top','left']:
 ax.set_title('CA Vehicles per Capita (2022)', size=18, weight='bold')
 
 # Save plot
-fig.savefig('../pics/vpc_2022.png')
+fig.savefig('../pics/vpc_2022_2.png')
 plt.close(fig)
 
 
@@ -177,5 +177,5 @@ for edge in ['right', 'bottom', 'top','left']:
 ax.set_title('CA Vehicles per Capita Pct. Change from 2018 to 2022', size=18, weight='bold')
 
 # Save plot
-fig.savefig('../pics/vpc_pct_change_2018_2022.png')
+fig.savefig('../pics/vpc_pct_change_2018_2022_2.png')
 plt.close(fig)

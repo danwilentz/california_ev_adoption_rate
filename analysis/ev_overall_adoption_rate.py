@@ -74,11 +74,14 @@ goal.plot(kind = 'line',
 # Plot goal marker
 ax.plot(date(2026, 1, 1), 35.0, 'rx', mfc='none', markersize = 20, label='2026 Goal') 
 
+# Plot 2023 EV Adoption Rate per energy ca dashboard:
+ax.plot(date(2023, 1, 1), 18.8, 'bo', mfc='none', markersize = 20, label='2023 Rate (extra data source)') 
+
 # Additional Formatting
 ax.set_xlabel('Year', fontsize = 14)
 ax.legend(loc = 'lower right')
 ax.grid(color='#DDDDDD', linestyle=':', linewidth=0.8)
 
 # Save plot
-fig.savefig('../pics/overall_ev_progress.png')
+fig.savefig('../pics/overall_ev_progress_2.png')
 plt.close(fig)

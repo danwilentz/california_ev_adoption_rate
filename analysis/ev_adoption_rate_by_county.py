@@ -69,10 +69,14 @@ county_info['ev_rate_2021'] = round(county_info['evs_2021']/county_info['vehicle
 
 print('Processing expected EV adoption rates in 2026')
 # Extrapolate which counties are on target for 2026
-# Based on the difference between 2021 and 2022, if we assume the same linear increase each year,
+# Let's define our estimate for YoY growth as the average of growth from 2021 to 2022 per county
+# with overall increase from 2022 to 2023 that we can see on:
+# https://www.energy.ca.gov/data-reports/energy-almanac/zero-emission-vehicle-and-infrastructure-statistics/new-zev-sales
+# Based on this extrapolation assumption, if we assume the same linear increase each year,
 # Do we see counties hitting the 35% target by 2026?
+overall_growth_2023_2022 = 18.7 - 9.5
 county_info['2022_yoy_improvement'] = county_info['ev_rate_2022'] - county_info['ev_rate_2021']
-county_info['ev_rate_2026_extrap'] = county_info['2022_yoy_improvement']*4 + county_info['ev_rate_2022']
+county_info['ev_rate_2026_extrap'] = ((county_info['2022_yoy_improvement'] + overall_growth_2023_2022 )/2)*4 + county_info['ev_rate_2022']
 county_info['2026_target_hit'] = county_info['ev_rate_2026_extrap'] >= 35.0
 county_info['color'] = np.where(county_info['2026_target_hit'], 'limegreen', 'tomato')
 
@@ -147,7 +151,7 @@ for edge in ['right', 'bottom', 'top','left']:
 ax.set_title('CA EV Adoption Rate (2022) by County', size=18, weight='bold')
 
 # Save plot
-fig.savefig('../pics/ev_rate_2022.png')
+fig.savefig('../pics/ev_rate_2022_3.png')
 plt.close(fig)
 
 
@@ -173,7 +177,7 @@ for edge in ['right', 'bottom', 'top','left']:
 ax.set_title('Expected Outcome by County: 35% Car Sales are EVs by 2026', size=16, weight='bold')
 
 # Save plot
-fig.savefig('../pics/ev_rate_2026_expectations.png')
+fig.savefig('../pics/ev_rate_2026_expectations_3.png')
 plt.close(fig)
 
 
