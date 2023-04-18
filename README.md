@@ -12,8 +12,8 @@ To run the code yourself, navigate to the `analysis` folder. Run any of the four
 
 ## Statewide EV Adoption Rate Progress:
 
-![Overall EV Progress](/pics/overall_ev_progress.png)
+![Overall EV Progress](/pics/overall_ev_progress_2.png)
 
 ## 2022 EV Adoption Rate (County Breakdown)
 
-![County EV Adoption Rate](/pics/ev_rate_2022.png)
+![County EV Adoption Rate](/pics/ev_rate_2022_3.png)
